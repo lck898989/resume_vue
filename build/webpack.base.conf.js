@@ -3,24 +3,28 @@ const path = require('path')
 const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
-const htmlWebpackPlugin = require('html-webpack-plugin');
-
+const glob = require('glob');
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
-
-
-
+//获得到入口文件的内容
+function getEntrys(jspath){
+  let entry= {};
+  glob.sync(jspath).forEach(function(element){
+    console.log("element is ",element);
+    //得到文件名
+    let filename = path.win32.basename(element,path.extname(element));
+    entry[filename] = element;
+  });
+  console.log("entrys is ",entry);
+  return entry
+}
 module.exports = {
   context: path.resolve(__dirname, '../'),
-  entry: {
-    index : './src/view/index/index.js',
-    cart  : './src/view/cart/cart.js'
-
-  },
+  entry: getEntrys('./src/view/**/*.js'),
   output: {
     path: config.build.assetsRoot,
-    filename: '[name].js',
+    filename: 'js/[name].js',
     publicPath: process.env.NODE_ENV === 'production'
       ? config.build.assetsPublicPath
       : config.dev.assetsPublicPath
@@ -51,27 +55,6 @@ module.exports = {
           limit: 10000,
           name: utils.assetsPath('img/[name].[hash:7].[ext]')
         }
-      },
-      {
-        test : /\.css$/,
-        use  : ['style-loader',{
-          loader : 'css-loader',
-          options : {
-            importLoaders : 1
-          }
-        },{
-          loader : 'postcss-loader',
-          options : {
-            ident : 'postcss',
-            plugins : [
-                require('postcss-import')(),
-                require('autoprefixer')()
-            ],
-            config : {
-                path : ''
-            }
-        } 
-        }]
       },
       {
         test: /\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/,

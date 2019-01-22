@@ -10,6 +10,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const glob = require('glob');
 
 const env = process.env.NODE_ENV === 'testing'
   ? require('../config/test.env')
@@ -62,22 +63,22 @@ const webpackConfig = merge(baseWebpackConfig, {
     // generate dist index.html with correct asset hash for caching.
     // you can customize output by editing /index.html
     // see https://github.com/ampedandwired/html-webpack-plugin
-    new HtmlWebpackPlugin({
-      filename: process.env.NODE_ENV === 'testing'
-        ? 'index.html'
-        : config.build.index,
-      template: 'index.html',
-      inject: true,
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeAttributeQuotes: true
-        // more options:
-        // https://github.com/kangax/html-minifier#options-quick-reference
-      },
-      // necessary to consistently work with multiple chunks via CommonsChunkPlugin
-      chunksSortMode: 'dependency'
-    }),
+    // new HtmlWebpackPlugin({
+    //   filename: process.env.NODE_ENV === 'testing'
+    //     ? 'index.html'
+    //     : config.build.index,
+    //   template: 'index.html',
+    //   inject: true,
+    //   minify: {
+    //     removeComments: true,
+    //     collapseWhitespace: true,
+    //     removeAttributeQuotes: true
+    //     // more options:
+    //     // https://github.com/kangax/html-minifier#options-quick-reference
+    //   },
+    //   // necessary to consistently work with multiple chunks via CommonsChunkPlugin
+    //   chunksSortMode: 'dependency'
+    // }),
     // keep module.id stable when vendor modules does not change
     new webpack.HashedModuleIdsPlugin(),
     // enable scope hoisting
@@ -122,7 +123,41 @@ const webpackConfig = merge(baseWebpackConfig, {
     ])
   ]
 })
-
+//获得页面的路径数组
+function getEntry(globPath) {
+  var entries = {},
+    basename, tmp, pathname;
+  //匹配文件
+  glob.sync(globPath).forEach(function(entry) {
+    basename = path.basename(entry, path.extname(entry));
+    tmp = entry.split('/').splice(-3);
+    pathname = basename; // 正确输出js和html的路径
+    entries[pathname] = entry;
+  });
+  console.log("dev-entrys:");
+  console.log("entries is ",entries);
+  return entries;
+}
+var pages = getEntry('./src/view/**/*.html');
+console.log("dev pages----------------------");
+console.log("webpackConfig is ",webpackConfig);
+console.log("page is ",pages);
+for (var pathname in pages) {
+  console.log("filename:" + pathname + '.html');
+  console.log("template:" + pages[pathname]);
+  // 配置生成的html文件，定义路径等
+  var conf = {
+    filename: pathname + '.html',
+    template: pages[pathname], // 模板路径
+    minify: { //传递 html-minifier 选项给 minify 输出
+      removeComments: true
+    },
+    inject: 'body', // js插入位置
+    chunks: [pathname, "vendor", "manifest"] // 每个html引用的js模块，也可以在这里加上vendor等公用模块
+  };
+  // 需要生成几个html文件，就配置几个HtmlWebpackPlugin对象
+  webpackConfig.plugins.push(new HtmlWebpackPlugin(conf));
+}
 if (config.build.productionGzip) {
   const CompressionWebpackPlugin = require('compression-webpack-plugin')
 

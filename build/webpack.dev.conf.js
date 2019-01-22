@@ -66,15 +66,15 @@ const devWebpackConfig = merge(baseWebpackConfig, {
 function getEntry(globPath) {
   var entries = {},
     basename, tmp, pathname;
-
+  //匹配文件
   glob.sync(globPath).forEach(function(entry) {
     basename = path.basename(entry, path.extname(entry));
     tmp = entry.split('/').splice(-3);
-    pathname = tmp.splice(0, 1) + '/' + basename; // 正确输出js和html的路径
+    pathname = basename; // 正确输出js和html的路径
     entries[pathname] = entry;
   });
   console.log("dev-entrys:");
-  console.log(entries);
+  console.log("entries is ",entries);
   return entries;
 }
 var pages = getEntry('./src/view/**/*.html');
@@ -98,6 +98,7 @@ for (var pathname in pages) {
   devWebpackConfig.plugins.push(new HtmlWebpackPlugin(conf));
 }
 console.log("after for devWebpackConfig is ",devWebpackConfig);
+console.log("process-->env is ",process.env);
 module.exports = new Promise((resolve, reject) => {
   portfinder.basePort = process.env.PORT || config.dev.port
   portfinder.getPort((err, port) => {
@@ -105,8 +106,11 @@ module.exports = new Promise((resolve, reject) => {
       console.log('页面发生错误');
       reject(err)
     } else {
+      console.log("port is ",port);
+      console.log("process.env is ",typeof process.env);
       // publish the new Port, necessary for e2e tests
       process.env.PORT = port
+      console.log("process.env.PORT is",process.env.PORT);
       // add port to devServer config
       devWebpackConfig.devServer.port = port
 
